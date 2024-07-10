@@ -1,7 +1,7 @@
 # Troubleshooting Tools
 After a couple of troubleshooting challenges with my kubernetes cluster, I found a few useful  tools.
 
-## http/https-echo
+## Tool:  http/https-echo
 I borrowed yaml from [Shubham K. Sawant](https://shubhamksawant.medium.com/) and deployed a rather generic web server on my cluster.  I substituted an echo server from  [https://code.mendhak.com/](https://code.mendhak.com/) for the apache image.  See web.yaml
 ```
 jkozik@knode202:~/httpd$ cat web.yaml
@@ -43,7 +43,7 @@ spec:
             - containerPort: 8080
 jkozik@knode202:~/httpd$
 ```
-## Ingress k8s.kozik.net
+### Ingress k8s.kozik.net
 I want to be able to get at my httpd-echo server from the internet, so I setup an ingress.  I have a normal NGINX ingress controller already installed. I map it to this server using the following yaml:
 ```
 jkozik@knode202:~/httpd$ cat web-ingress.yaml
@@ -73,7 +73,7 @@ jkozik@knode202:~/httpd$
 ```
 I have an apache httpd reverse proxy setup that maps the external URL to route to the port number for this service.
 
-## Verify httpd-echo service/ingress
+### Verify httpd-echo service/ingress
 ```
 jkozik@knode202:~/httpd$ kubectl get svc httpd
 NAME    TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
@@ -109,7 +109,8 @@ jkozik@knode202:~/httpd$ curl -H "Host: k8s.kozik.net" http://192.168.100.202:30
   "connection": {}
 }jkozik@knode202:~/httpd$
 ```
-# curl image 
+
+## Tool:  curl image 
 - kubectl run curl -it --rm --image=curlimages/curl -- sh
 
 To help with debugging, it helps to verify that the POD is working by curling from it's service.  For example with my httpd echo server:
@@ -174,6 +175,7 @@ If you don't see a command prompt, try pressing enter.
     "hostname": "httpd-deployment-devops-59ccbdf487-gxpp7"
   },
   "connection": {}
+
 }~ $ curl httpd
 {
   "path": "/",
@@ -196,12 +198,14 @@ If you don't see a command prompt, try pressing enter.
     "hostname": "httpd-deployment-devops-59ccbdf487-qhrlr"
   },
   "connection": {}
-}~ $ exit
+ $ exit
 Session ended, resume using 'kubectl attach curl -c curl -i -t' command when the pod is running
 pod "curl" deleted
-jkozik@dell3:~$
 
-# netshoot
+jkozik@dell3:~$
+```
+
+# Tool:  netshoot
 I also discovered the netshoot tool.  I creates containers/pods/sidecars to help troubleshoot kubernetes network problems. Following the example on the github page, [Netshoot with Kubernetes](https://github.com/nicolaka/netshoot#netshoot-with-kubernetes), I attached a side car to my httpd echo server:
 ```
 jkozik@knode202:~/httpd$ kubectl get pod | grep httpd
@@ -235,6 +239,14 @@ Version: 0.13
 
  httpd-deployment-devops-59ccbdf487-gxpp7  ~  curl localhost
 curl: (7) Failed to connect to localhost port 80 after 1 ms: Couldn't connect to server
+
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~  netstat -tulpn
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 :::8443                 :::*                    LISTEN      -
+tcp        0      0 :::8080                 :::*                    LISTEN      -
+
 
  httpd-deployment-devops-59ccbdf487-gxpp7  ~  curl localhost:8080
 {
