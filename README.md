@@ -109,9 +109,101 @@ jkozik@knode202:~/httpd$ curl -H "Host: k8s.kozik.net" http://192.168.100.202:30
   "connection": {}
 }jkozik@knode202:~/httpd$
 ```
+# curl image - kubectl run curl -it --rm --image=curlimages/curl -- sh
+To help with debugging, it helps to verify that the POD is working by curling from it's service.  For example with my httpd echo server:
+```
+jkozik@knode202:~/httpd$ kubectl get svc httpd
+NAME    TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+httpd   NodePort   10.101.175.143   <none>        80:30004/TCP   6d19h
 
+jkozik@knode202:~/httpd$ curl 10.101.175.143
+{
+  "path": "/",
+  "headers": {
+    "host": "10.101.175.143",
+    "user-agent": "curl/7.81.0",
+    "accept": "*/*"
+  },
+  "method": "GET",
+  "body": "",
+  "fresh": false,
+  "hostname": "10.101.175.143",
+  "ip": "::ffff:192.168.100.202",
+  "ips": [],
+  "protocol": "http",
+  "query": {},
+  "subdomains": [],
+  "xhr": false,
+  "os": {
+    "hostname": "httpd-deployment-devops-59ccbdf487-gxpp7"
+  },
+  "connection": {}
+}jkozik@knode202:~/httpd$
+```
+
+However, this only works if you are logged into one of the nodes of the cluster, off the cluster, these IP address ranges are not reachable.  I found a useful tool from [curl-container](https://github.com/curl/curl-container) that temporarily creates a POD that is configured to run curl.  See example below from a non-node server login:
+```
+jkozik@dell3:~$ kubectl get svc httpd
+NAME    TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+httpd   NodePort   10.101.175.143   <none>        80:30004/TCP   6d19h
+jkozik@dell3:~$ curl 10.101.175.143
+^C
+jkozik@dell3:~$  kubectl run curl -it --rm --image=curlimages/curl -- sh
+If you don't see a command prompt, try pressing enter.
+~ $ curl 10.101.175.143
+{
+  "path": "/",
+  "headers": {
+    "host": "10.101.175.143",
+    "user-agent": "curl/8.8.0",
+    "accept": "*/*"
+  },
+  "method": "GET",
+  "body": "",
+  "fresh": false,
+  "hostname": "10.101.175.143",
+  "ip": "::ffff:10.10.75.234",
+  "ips": [],
+  "protocol": "http",
+  "query": {},
+  "subdomains": [],
+  "xhr": false,
+  "os": {
+    "hostname": "httpd-deployment-devops-59ccbdf487-gxpp7"
+  },
+  "connection": {}
+}~ $ curl httpd
+{
+  "path": "/",
+  "headers": {
+    "host": "httpd",
+    "user-agent": "curl/8.8.0",
+    "accept": "*/*"
+  },
+  "method": "GET",
+  "body": "",
+  "fresh": false,
+  "hostname": "httpd",
+  "ip": "::ffff:10.10.75.234",
+  "ips": [],
+  "protocol": "http",
+  "query": {},
+  "subdomains": [],
+  "xhr": false,
+  "os": {
+    "hostname": "httpd-deployment-devops-59ccbdf487-qhrlr"
+  },
+  "connection": {}
+}~ $ exit
+Session ended, resume using 'kubectl attach curl -c curl -i -t' command when the pod is running
+pod "curl" deleted
+jkozik@dell3:~$
+
+
+```
 ## References
 - [Deploy Apache Web Server on Kubernetes CLuster](https://shubhamksawant.medium.com/deploy-apache-web-server-on-kubernetes-cluster-0552638ca171) by [Shubham K. Sawant](https://shubhamksawant.medium.com/)
 - [An https echo Docker container for web debugging](https://code.mendhak.com/docker-http-https-echo/) by [https://code.mendhak.com/](https://code.mendhak.com/)
+- [curl-container](https://github.com/curl/curl-container) 
 
 # k8s-debugging-tools
