@@ -109,7 +109,9 @@ jkozik@knode202:~/httpd$ curl -H "Host: k8s.kozik.net" http://192.168.100.202:30
   "connection": {}
 }jkozik@knode202:~/httpd$
 ```
-# curl image - kubectl run curl -it --rm --image=curlimages/curl -- sh
+# curl image 
+- kubectl run curl -it --rm --image=curlimages/curl -- sh
+
 To help with debugging, it helps to verify that the POD is working by curling from it's service.  For example with my httpd echo server:
 ```
 jkozik@knode202:~/httpd$ kubectl get svc httpd
@@ -199,11 +201,77 @@ Session ended, resume using 'kubectl attach curl -c curl -i -t' command when the
 pod "curl" deleted
 jkozik@dell3:~$
 
-
+# netshoot
+I also discovered the netshoot tool.  I creates containers/pods/sidecars to help troubleshoot kubernetes network problems. Following the example on the github page, [Netshoot with Kubernetes](https://github.com/nicolaka/netshoot#netshoot-with-kubernetes), I attached a side car to my httpd echo server:
 ```
+jkozik@knode202:~/httpd$ kubectl get pod | grep httpd
+NAME                                       READY   STATUS      RESTARTS        AGE
+httpd-deployment-devops-59ccbdf487-gxpp7   1/1     Running     0               6d19h
+httpd-deployment-devops-59ccbdf487-qhrlr   1/1     Running     0               6d19h
+
+jkozik@knode202:~/httpd$ kubectl debug httpd-deployment-devops-59ccbdf487-gxpp7 -it --image=nicolaka/netshoot
+Defaulting debug container name to debugger-nktqm.
+
+If you don't see a command prompt, try pressing enter.
+
+                    dP            dP                           dP
+                    88            88                           88
+88d888b. .d8888b. d8888P .d8888b. 88d888b. .d8888b. .d8888b. d8888P
+88'  `88 88ooood8   88   Y8ooooo. 88'  `88 88'  `88 88'  `88   88
+88    88 88.  ...   88         88 88    88 88.  .88 88.  .88   88
+dP    dP `88888P'   dP   `88888P' dP    dP `88888P' `88888P'   dP
+
+Welcome to Netshoot! (github.com/nicolaka/netshoot)
+Version: 0.13
+
+
+
+
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~ 
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~  pwd
+/root
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~  curl localhost
+curl: (7) Failed to connect to localhost port 80 after 1 ms: Couldn't connect to server
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~  curl localhost:8080
+{
+  "path": "/",
+  "headers": {
+    "host": "localhost:8080",
+    "user-agent": "curl/8.7.1",
+    "accept": "*/*"
+  },
+  "method": "GET",
+  "body": "",
+  "fresh": false,
+  "hostname": "localhost",
+  "ip": "::1",
+  "ips": [],
+  "protocol": "http",
+  "query": {},
+  "subdomains": [],
+  "xhr": false,
+  "os": {
+    "hostname": "httpd-deployment-devops-59ccbdf487-gxpp7"
+  },
+  "connection": {}
+}#
+
+ httpd-deployment-devops-59ccbdf487-gxpp7  ~ 
+```
+
+Note above, I tried to curl my httpd server, inside the pod.  (look for curl localhost). It failed.  So I read the documentation and confirmed that the server defaults to serve http on port 8080.  Look for the curl localhost:8080 command line.  
+
+I find this very helpful.  
+
+
 ## References
 - [Deploy Apache Web Server on Kubernetes CLuster](https://shubhamksawant.medium.com/deploy-apache-web-server-on-kubernetes-cluster-0552638ca171) by [Shubham K. Sawant](https://shubhamksawant.medium.com/)
 - [An https echo Docker container for web debugging](https://code.mendhak.com/docker-http-https-echo/) by [https://code.mendhak.com/](https://code.mendhak.com/)
 - [curl-container](https://github.com/curl/curl-container) 
+- [netshoot](https://github.com/nicolaka/netshoot) by [nicolaka](https://github.com/nicolaka)
 
 # k8s-debugging-tools
