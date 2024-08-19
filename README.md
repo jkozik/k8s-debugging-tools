@@ -279,11 +279,13 @@ Note above, I tried to curl my httpd server, inside the pod.  (look for curl loc
 
 I find this very helpful.  
 
-## Best Reference
+## Best References
 [The Kubernetes Troubleshooting Handbook](https://itnext.io/the-kubernetes-troubleshooting-handbook-7596a1fdf2ff).
 
-I found this on one of my daily Medium Daily Digest emails.  I wish I would have found this along time ago. 
+I found the above on one of my daily Medium Daily Digest emails.  I wish I would have found this along time ago. 
 
+[My most useful network troubleshooting commands and tools](https://code.mendhak.com/networking-cheat-sheet/)
+The link above also has a good pointer to how to retire Lightroom from your photography workflow.
 
 ## References
 - [Deploy Apache Web Server on Kubernetes CLuster](https://shubhamksawant.medium.com/deploy-apache-web-server-on-kubernetes-cluster-0552638ca171) by [Shubham K. Sawant](https://shubhamksawant.medium.com/)
